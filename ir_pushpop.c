@@ -24,6 +24,8 @@ ir_node * addPushPop(ir_node * ir) {
         return NULL;
     }
 
+    ir->next = addPushPop(ir->next);
+
     __attribute__ ((unused))
     ir_node * next = ir->next;
 
