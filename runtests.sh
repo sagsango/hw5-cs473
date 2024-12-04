@@ -97,6 +97,39 @@ do
         fi
     done
 
+    for F in $(ls $TEST_DIR/$T |  grep ".bluejay$" |grep fail | sort)
+    do
+        echo -n -e "Running ${RED}negative test${RESET} $T/$F"
+        echo -n $'\t'
+        TESTFILE="$TEST_DIR/$T/$F"
+        cp $TESTFILE $DUMMY
+        (ASAN_OPTIONS="detect_leaks=false" ./$COMPILER $DUMMY &> /dev/null)
+        RET=$?
+        $(./$COMPILER $DUMMY &> /dev/null)
+        RETLEAK=$?
+
+        if [ $RET -ne 0 ]
+        then
+            echo -e -n "${GREEN}RET OK${RESET}"
+        else
+            echo -e -n "${RED}RET FAIL${RESET}"
+            #continue 2
+            PASS=0
+        fi
+
+        if [ $RETLEAK -eq 23 ]
+        then
+            echo -e " ${YELLOW}LEAKS FAIL${RESET}"
+            LEAK=0
+        else
+            echo -e " ${GREEN}LEAKS OK${RESET}"
+        fi
+
+
+        rm $DUMMY
+    done
+
+
     if [ $PASS -eq 0 ]
     then
             echo -e "${RED}                   TEST ${T} FAILING                  ${RESET}"
