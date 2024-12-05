@@ -98,6 +98,7 @@ int main(int argc, char **argv) {
      ir_list_write(list_ir, outname);
  } else {
      // Optional:  Add explicit push/pop IRs
+     // ir_pushpop.c
      ir_node * pushpop = addPushPop(list_ir);
      // Generate MIPS file
      mips_ir(pushpop, outname);

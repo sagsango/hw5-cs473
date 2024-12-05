@@ -33,7 +33,17 @@ ir_node * addPushPop(ir_node * ir) {
         case ir_nop: break;
         case ir_iconst: break;
         case ir_sconst: break;
-        case ir_add: break;
+        case ir_add: {
+            /*
+             *
+             * POP 0
+             * POP 1
+             * ir
+             * PUSH 0
+             *
+             */
+            break;
+        }
         case ir_sub: break;
         case ir_mul: break;
         case ir_div: break;

@@ -9,6 +9,10 @@
 
 static FILE * out;
 
+  /*
+   * L43:
+   *
+   */
 __attribute__ ((unused))
 static void emitLabel(char * label, char * comment, ...) {
     static char buffer[1024];
@@ -24,6 +28,9 @@ static void emitLabel(char * label, char * comment, ...) {
     fflush(out);
 }
 
+/*
+ *  ("li $v0, %d", "", ir->iconst)
+ */
 __attribute__ ((unused))
 static void emitInstruction(char * instruction, char * comment, ...) {
     static char buffer[1024];
@@ -88,7 +95,7 @@ static void mips_ir_translate(ir_node * ir) {
 __attribute__ ((unused))
 static void mips_ir_variables(ir_node * ir) {
     while (ir != NULL) {
-        // TODO Generate MIPS code for variables
+        // TODO Generate MIPS code for variables and strings
 
         ir = ir->next;
     }
