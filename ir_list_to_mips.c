@@ -23,6 +23,7 @@ static void emitLabel(char * label, char * comment, ...) {
 
     va_start(argp, comment);
     vsnprintf(buffer, sizeof(buffer), label, argp);
+    //fprintf(stderr, "%s\n", label);
     va_end(argp);
     fprintf(out, "%s:\n", buffer);
     fflush(out);
@@ -52,35 +53,211 @@ static void mips_ir_translate(ir_node * ir) {
     }
 
     switch (ir->kind) {
-        case ir_nop:            { assert(0); }
-        case ir_iconst:         { assert(0); }
+        case ir_nop: {
+            break;
+        }
+        case ir_iconst: {
+            //emitInstruction("li $v0, %d", "ICONST", ir->data.iconst);
+            /* TODO: PUSH on register */
+            emitInstruction("li $v0, %d", "ASSIGN the reg", ir->data.iconst);
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
         case ir_sconst:         { assert(0); }
-        case ir_add:            { assert(0); }
-        case ir_sub:            { assert(0); }
-        case ir_mul:            { assert(0); }
-        case ir_div:            { assert(0); }
-        case ir_mod:            { assert(0); }
-        case ir_bor:            { assert(0); }
-        case ir_band:           { assert(0); }
-        case ir_xor:            { assert(0); }
+        case ir_add: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("add $v0, $v0, $v1", "v0 = v0 + v1");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_sub: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("sub $v0, $v0, $v1", "v0 = v0 - v1");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_mul: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("mul $v0, $v0, $v1", "v0 = v0 * v1");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_div: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("div $v0, $v1", "v0 % v1");
+            emitInstruction("mflo $v0", "v0 = lo");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_mod: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("div $v0, $v1", "v0 % v1");
+            emitInstruction("mfhi $v0", "v0 = lo");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_bor:            {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("or $v0, $v0, $v1", "v0 = v0 | v1");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_band: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("and $v0, $v0, $v1", "v0 = v0 & v1");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_xor: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("xor $v0, $v0, $v1", "v0 = v0 ^ v1");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
         case ir_or:             { assert(0); }
         case ir_and:            { assert(0); }
-        case ir_eq:             { assert(0); }
-        case ir_lt:             { assert(0); }
-        case ir_gt:             { assert(0); }
-        case ir_not:            { assert(0); }
-        case ir_reserve:        { assert(0); }
-        case ir_read:           { assert(0); }
-        case ir_write:          { assert(0); }
+        case ir_eq: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("seq $v0, $v0, $v1", "v0 = v0 == v1");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_lt: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("slt $v0, $v0, $v1", "v0 = v0 < v1");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_gt: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v1, ($sp)", "LOAD @sp");
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("sgt $v0, $v0, $v1", "v0 = v0 > v1");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_not: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("sltiu $v0, $v0, 1", "v0 = !v0");
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+            assert(0);
+        }
+        case ir_reserve: {
+            /* Already reserved in the .data section */
+            break;
+        }
+        case ir_read: {
+            emitInstruction("la $v0, %s", "LOAD @", ir->data.read_write.name);
+            emitInstruction("lw $v1, ($v0)", "LOAD @v0");
+            emitInstruction("sw $v1, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+            assert(0);
+        }
+        case ir_write: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("la $v1, %s", "LOAD @", ir->data.read_write.name);
+            emitInstruction("sw $v0, ($v1)", "STORE @v1");
+            break;
+            assert(0);
+        }
         case ir_arglocal_read:  { assert(0); }
         case ir_arglocal_write: { assert(0); }
-        case ir_lbl:            { assert(0); }
-        case ir_jump:           { assert(0); }
-        case ir_branchzero:     { assert(0); }
+        case ir_lbl: {
+            emitLabel(ir->data.lbl->name, "LABEL");
+            break;
+        }
+        case ir_jump: {
+            emitInstruction("j %s", "JUMP", ir->data.lbl->name);
+            break;
+        }
+        case ir_branchzero: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "LOAD @sp");
+            emitInstruction("beq $v0, $zero, %s", "BRANCH if 0", ir->data.lbl->name);
+            break;
+        }
         case ir_call:           { assert(0); }
         case ir_function:       { assert(0); }
         case ir_ret:            { assert(0); }
-        case ir_intrinsic:      { assert(0); }
+        case ir_intrinsic: {
+            switch(ir->data.intrinsic) {
+                case intrinsic_exit: {
+                    //TODO: POP in a register, then systems call
+                    /*
+                     *  emitInstruction("move $a0, $v0", "EXIT syscall arg");
+                     *  emitInstruction("li $v0, 17", "EXIT syscall number");
+                     *  emitInstruction("syscall", "EXIT system call");
+                    */
+                    emitInstruction("add $sp, $sp, 4", "INC sp");
+                    emitInstruction("lw $a0, ($sp)", "LOAD @sp");
+                    emitInstruction("li $v0, 17", "EXIT syscall number");
+                    emitInstruction("syscall", "EXIT system call");
+                    break;
+                }
+                case intrinsic_print_int: {
+                    //TODO: POP in a register, then systems call
+                    /*emitInstruction("move $a0, $v0", "PRINTINT syscall arg");
+                    emitInstruction("li $v0, 1", "PRINTINT syscall number");
+                    emitInstruction("syscall", "PRINTINT system call");*/
+                    emitInstruction("add $sp, $sp, 4", "INC sp");
+                    emitInstruction("lw $a0, ($sp)", "LOAD @sp");
+                    emitInstruction("li $v0, 1", "EXIT syscall number");
+                    emitInstruction("syscall", "EXIT system call");
+                    break;
+                }
+                default:
+                    assert(0);
+            }
+            break;
+        }
         case ir_seq:            { assert(0); }
         case ir_push:           { assert(0); }
         case ir_pop:            { assert(0); }
@@ -96,7 +273,16 @@ __attribute__ ((unused))
 static void mips_ir_variables(ir_node * ir) {
     while (ir != NULL) {
         // TODO Generate MIPS code for variables and strings
-
+        switch (ir->kind) {
+            case ir_reserve: {
+                emitInstruction("%s: .space %d", "Allocate Space", ir->data.reserve.name, ir->data.reserve.size);
+                break;
+            }
+            default: {
+                /* Nothing to do */
+                break;
+            }
+        }
         ir = ir->next;
     }
 }
