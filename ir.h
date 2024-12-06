@@ -27,8 +27,11 @@ enum ir_op {
     ir_or,
     ir_and,
     ir_eq,
+    ir_ne,
     ir_lt,
+    ir_le,
     ir_gt,
+    ir_ge,
     ir_not,
 
     // Variables
@@ -49,10 +52,14 @@ enum ir_op {
     ir_ret,
     ir_intrinsic,
 
+/*
+	TODO: FOr arrary read write
+*/
     ir_seq,  // Sequence of two nodes, uses irs
 
     ir_push, // register specified in ival
     ir_pop,  // register specified in ival
+    ir_program,
 };
 
 enum intrinsic {
@@ -75,6 +82,10 @@ typedef struct ir_node {
         struct { ir_label* lbl; int vars; } call_function;
 
         struct { struct ir_node * o1; struct ir_node * o2; } seq;
+
+	/*
+		TODO: FOr array read wirte
+	*/ 
     } data;
     // You can use these to form a tree
     struct ir_node * tree_ir_1;

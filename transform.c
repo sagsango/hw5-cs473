@@ -29,12 +29,30 @@ void transformExpr(exp_node * e, S_table global_types, S_table function_decs, fr
         // TODO transform the rest of the expressions in the AST as needed
         case funcall_exp:
             break;
-        case str_exp:
+        case plus_exp:
+            case minus_exp:
+        case band_exp:
+        case bor_exp:
+        case mul_exp:
+        case le_exp:
+        case lt_exp:
+        case ge_exp:
+        case gt_exp:
+        case ne_exp:
+        case eq_exp:
+        case or_exp:
+        case and_exp:
+            break;
+        case string_exp:
+            break;
+        case name_exp:
             break;
         default:
             assert(0);
     }
 }
+
+extern  program p;
 
 void transformStmts(list * l, S_table global_types, S_table function_decs, frame * f) {
     if (l == NULL) return;
@@ -54,7 +72,55 @@ void transformStmts(list * l, S_table global_types, S_table function_decs, frame
             // Transform if statements as needed
             // Don't forget to traverse the whole AST
             transformExpr(s->data.ret_exp, global_types, function_decs, f);
+            /*if (f == NULL) {
+                // Transform return into exit at toplevel
+                exp_node * ret = s->data.ret_exp;
+                exp_node * exit_call = FunCallNode("exit", ListAddFirst(ret, NULL));
+                s->kind = exp_stmt;
+                s->data.exp_ops.exp = exit_call;
+            }*/
             break;
+        }
+        case repeat_stmt: {
+            /*
+             *  transform repeat into while
+             *
+             *
+             *
+             *
+             */
+            transformExpr(s->data.repeat_ops.times, global_types, function_decs, f);
+            transformStmts(s->data.repeat_ops.stmts, global_types, function_decs, f);
+
+
+            static int repeat_var = 0;
+            char varname[10];
+            snprintf(varname, sizeof(varname), "$repeat$%d", repeat_var++);
+            char * v = strdup(varname);
+
+            p.variables = ListAddLast(VarDecNode(v, IntTyNode(), IntNode(1024)), p.variables);
+            S_enter(global_types, S_Symbol(v), IntTyNode());
+
+            exp_node * times = s->data.repeat_ops.times;
+            list * stmts = s->data.repeat_ops.stmts;
+
+            s->kind = assign_stmt;
+            s->data.assign_ops.name = v;
+            s->data.assign_ops.exp = times;
+
+            // while (<var> > 0) { <body>; var = var - 1}
+
+            exp_node * guard = GTNode(NameNode(v), IntNode(0));
+            stmt_node * inc = AssignNode(v, MinusNode(NameNode(v), IntNode(1)));
+            stmts = ListAddLast(inc, stmts);
+            stmt_node * while_node = WhileNode(guard, stmts, NULL);
+
+
+            l->next = ListAddFirst(while_node, l->next);
+
+
+
+
         }
         // TODO transform the rest of the statements in the AST as needed
         default:
@@ -76,10 +142,10 @@ void transformVariables(list * l, S_table global_types, S_table function_decs, f
 
 void transformFunction(fundec_node * fundec, S_table globals, S_table functions_rets, frame * f) {
     // Transform function declarations as needed
-    transformStmts(fundec->body, globals, functions_rets, f);
+    transformStmts(fundec->statements, globals, functions_rets, f);
 
-    if (fundec->ret == VoidTyNode())
-        ListAddLast(RetNode(NULL), fundec->body);
+    if (fundec->type == VoidTyNode())
+        ListAddLast(RetNode(NULL), fundec->statements);
 }
 
 void transformFunctions(list * l, S_table global_types, S_table function_decs, S_table frames) {

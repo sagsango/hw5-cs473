@@ -69,6 +69,47 @@ int main(int argc, char **argv) {
  // Map from S_Symbol to fun_frame
  S_table functions_frames = S_empty();
 
+ S_enter(functions_decs,
+   S_Symbol("exit"),
+   FunDecNode(
+       "exit",
+       VoidTyNode(),
+       ListAddFirst(Param(IntTyNode(), "$$EXIT$$"), NULL),
+       NULL,
+       NULL)
+       );
+
+    S_enter(functions_decs,
+        S_Symbol("printint"),
+        FunDecNode(
+            "printint",
+            VoidTyNode(),
+            ListAddFirst(Param(IntTyNode(), "$$EXIT$$"), NULL),
+            NULL,
+            NULL
+            )
+        );
+
+    S_enter(functions_decs,
+       S_Symbol("printstring"),
+       FunDecNode(
+           "printstring",
+           VoidTyNode(),
+           ListAddFirst(Param(StringTyNode(), "$$EXIT$$"), NULL),
+           NULL,
+           NULL
+           )
+       );
+
+
+
+    vardec_node * implicit_i = VarDecNodeImpManually("i", IntTyNode(), IntNode(0));
+    vardec_node * implicit_j = VarDecNodeImpManually("j", IntTyNode(), IntNode(1));
+
+
+    p.variables = ListAddLast(implicit_i, p.variables);
+    p.variables = ListAddLast(implicit_j, p.variables);
+
  // symbol analysis
  symbolResolution(&p, globals_types, functions_decs, functions_frames);
 

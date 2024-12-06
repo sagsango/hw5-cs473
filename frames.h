@@ -1,4 +1,4 @@
-#ifndef SEM_ANALYSIS_FRAMES_H
+ #ifndef SEM_ANALYSIS_FRAMES_H
 #define SEM_ANALYSIS_FRAMES_H
 
 #include "ast.h"

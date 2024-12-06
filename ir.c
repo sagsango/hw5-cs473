@@ -37,6 +37,7 @@ ir_node * Iconst(int i) {
     return ret;
 }
 
+/* String constant */
 ir_node * Sconst(char * s) {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_sconst;
@@ -50,6 +51,7 @@ ir_node * Ops(enum ir_op ir) {
     return ret;
 }
 
+/* Declare an intrinsic */
 ir_node * Intrinsic(enum intrinsic ir) {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_intrinsic;
@@ -57,6 +59,7 @@ ir_node * Intrinsic(enum intrinsic ir) {
     return ret;
 }
 
+/* Declare a var */
 ir_node * Reserve(int size, char * name, char * val) {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_reserve;
@@ -66,6 +69,7 @@ ir_node * Reserve(int size, char * name, char * val) {
     return ret;
 }
 
+/* Read a var */
 ir_node * Read(char * name) {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_read;
@@ -73,6 +77,7 @@ ir_node * Read(char * name) {
     return ret;
 }
 
+/* Write a var */
 ir_node * Write(char * name) {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_write;
@@ -80,6 +85,7 @@ ir_node * Write(char * name) {
     return ret;
 }
 
+/* Args + Local var read: these are based on index  */
 ir_node * ArgLocalRead(int i) {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_arglocal_read;
@@ -87,6 +93,7 @@ ir_node * ArgLocalRead(int i) {
     return ret;
 }
 
+/* Args + Local var write: these are based on index */
 ir_node * ArgLocalWrite(int i) {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_arglocal_write;
@@ -101,6 +108,7 @@ ir_node * Label(ir_label * lbl) {
     return ret;
 }
 
+/* Function declaration : [laleb + no_of_vars(local+args)] */
 ir_node * Function(ir_label * lbl, int locs) {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_function;
@@ -109,6 +117,7 @@ ir_node * Function(ir_label * lbl, int locs) {
     return ret;
 }
 
+/* Function call */
 ir_node * Call(ir_label * lbl, int vars) {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_call;
@@ -117,6 +126,7 @@ ir_node * Call(ir_label * lbl, int vars) {
     return ret;
 }
 
+/* Return from function + global_return */
 ir_node * Return() {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_ret;
@@ -178,6 +188,7 @@ static void write_null_terminated_string(int fd, const char * string) {
     write_everything(fd, string, len*sizeof(char));
 }
 
+/* Extra info for the ir wrinting */
 void ir_list_write(ir_node * head, const char * file) {
     int fd = open(file, O_WRONLY | O_TRUNC | O_CREAT, S_IRGRP | S_IROTH | S_IRUSR | S_IWUSR);
 
@@ -199,8 +210,11 @@ void ir_list_write(ir_node * head, const char * file) {
             case ir_or:
             case ir_and:
             case ir_eq:
+            case ir_ne:
             case ir_lt:
+            case ir_le:
             case ir_gt:
+            case ir_ge:
             case ir_not:
             case ir_ret:
                 // No extra info needed
@@ -246,8 +260,14 @@ void ir_list_write(ir_node * head, const char * file) {
                 break;
 
             case ir_seq:
+                // TODO: Reverse it:
                 assert(0);
                 break;
+
+            /*
+   *  TODO: For array read write
+   *
+   */
 
             default:
                 assert(0);
@@ -290,9 +310,12 @@ static char * read_null_terminated_string(int fd) {
     return ret;
 }
 
+/* IR list reading work tohgather with ir_list_write() */
 ir_node * ir_list_read(const char * file) {
     int fd = open(file, O_RDONLY);
     assert(fd > 0);
+
+
 
     ir_node * head = NULL;
     ir_node * tail = NULL;
@@ -328,8 +351,11 @@ ir_node * ir_list_read(const char * file) {
             case ir_or:
             case ir_and:
             case ir_eq:
+            case ir_ne:
             case ir_lt:
+            case ir_le:
             case ir_gt:
+            case ir_ge:
             case ir_not:
             case ir_ret:
                 // No extra info needed
@@ -377,8 +403,14 @@ ir_node * ir_list_read(const char * file) {
                 break;
 
             case ir_seq:
+                // TODO:
                 assert(0);
                 break;
+
+            /*
+   *  TODO: For array read write
+   *
+   */
 
             default:
                 assert(0);
@@ -392,38 +424,41 @@ ir_node * ir_list_read(const char * file) {
 
 void ir_list_print(ir_node * head) {
     const char * names[] = {
-            "NOP",
-            "ICONST",
-            "SCONST",
-            "ADD",
-            "SUB",
-            "MUL",
-            "DIV",
-            "MOD",
-            "BOR",
-            "BAND",
-            "XOR",
-            "OR",
-            "AND",
-            "EQ",
-            "LT",
-            "GT",
-            "NOT",
-            "RESERVE",
-            "READ",
-            "WRITE",
-            "ARGLOCAL_READ",
-            "ARGLOCAL_WRITE",
-            "LBL",
-            "JUMP",
-            "BRANCHZERO",
-            "FUNCTION",
-            "CALL",
-            "RET",
-            "INTRINSIC",
-            "SEQ",
-            "PUSH",
-            "POP",
+            [ir_nop] = "NOP",
+            [ir_iconst] = "ICONST",
+            [ir_sconst] = "SCONST",
+            [ir_add] = "ADD",
+            [ir_sub] = "SUB",
+            [ir_mul] = "MUL",
+            [ir_div] = "DIV",
+            [ir_mod] = "MOD",
+            [ir_bor] = "BOR",
+            [ir_band] = "BAND",
+            [ir_xor] = "XOR",
+            [ir_or] = "OR",
+            [ir_and] = "AND",
+            [ir_eq] = "EQ",
+            [ir_ne] = "NE",
+            [ir_lt] = "LT",
+            [ir_le] = "LE",
+            [ir_gt] = "GT",
+            [ir_ge] = "GE",
+            [ir_not] = "NOT",
+            [ir_reserve] = "RESERVE",
+            [ir_read] = "READ",
+            [ir_write] = "WRITE",
+            [ir_arglocal_read] = "ARGLOCAL_READ",
+            [ir_arglocal_write] = "ARGLOCAL_WRITE",
+            [ir_lbl] = "LBL",
+            [ir_jump] = "JUMP",
+            [ir_branchzero] = "BRANCHZERO",
+            [ir_function] = "FUNCTION",
+            [ir_call] = "CALL",
+            [ir_ret] = "RET",
+            [ir_intrinsic] = "INTRINSIC",
+            [ir_seq] = "SEQ",
+            [ir_push] = "PUSH",
+            [ir_pop] = "POP",
     };
 
     const char * instrinsics[] = {
@@ -448,8 +483,11 @@ void ir_list_print(ir_node * head) {
             case ir_or:
             case ir_and:
             case ir_eq:
+            case ir_ne:
             case ir_lt:
+            case ir_le:
             case ir_gt:
+            case ir_ge:
             case ir_not:
             case ir_ret:
                 printf("\t%s\n", name);
@@ -496,8 +534,15 @@ void ir_list_print(ir_node * head) {
                 break;
 
             case ir_seq:
+                // TODO:
                 assert(0);
                 break;
+
+            /*
+               *  TODO: For array read write
+               *
+               */
+
 
             default:
                 assert(0);
