@@ -64,7 +64,13 @@ static void mips_ir_translate(ir_node * ir) {
             emitInstruction("sub $sp, $sp, 4", "DEC sp");
             break;
         }
-        case ir_sconst:         { assert(0); }
+        case ir_sconst: {
+            /* String = "Address of the Content" */
+            emitInstruction("la $v0, $%p$", "LOAD  @STR", ir->data.sconst);
+            emitInstruction("sw $v0, ($sp)", "STORE @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
         case ir_add: {
             emitInstruction("add $sp, $sp, 4", "INC sp");
             emitInstruction("lw $v1, ($sp)", "LOAD @sp");
@@ -239,7 +245,7 @@ static void mips_ir_translate(ir_node * ir) {
                     emitInstruction("add $sp, $sp, 4", "INC sp");
                     emitInstruction("lw $a0, ($sp)", "LOAD @sp");
                     emitInstruction("li $v0, 17", "EXIT syscall number");
-                    emitInstruction("syscall", "EXIT system call");
+                    emitInstruction("syscall", "SYSCALL");
                     break;
                 }
                 case intrinsic_print_int: {
@@ -249,8 +255,15 @@ static void mips_ir_translate(ir_node * ir) {
                     emitInstruction("syscall", "PRINTINT system call");*/
                     emitInstruction("add $sp, $sp, 4", "INC sp");
                     emitInstruction("lw $a0, ($sp)", "LOAD @sp");
-                    emitInstruction("li $v0, 1", "EXIT syscall number");
-                    emitInstruction("syscall", "EXIT system call");
+                    emitInstruction("li $v0, 1", "PRINT_INT syscall number");
+                    emitInstruction("syscall", "SYSCALL");
+                    break;
+                }
+                case intrinsic_print_string: {
+                    emitInstruction("add $sp, $sp, 4", "INC sp");
+                    emitInstruction("lw $a0, ($sp)", "LOAD @sp");
+                    emitInstruction("li $v0, 4", "PRINT_STRING syscall number");
+                    emitInstruction("syscall", "SYSCALL");
                     break;
                 }
                 default:
@@ -275,8 +288,12 @@ static void mips_ir_variables(ir_node * ir) {
         // TODO Generate MIPS code for variables and strings
         switch (ir->kind) {
             case ir_reserve: {
-                emitInstruction("%s: .space %d", "Allocate Space", ir->data.reserve.name, ir->data.reserve.size);
+                /* TODO: Untill we support the array, we need only 4 Bytes for evey data (StringVar too, because they are just @STRING */
+                emitInstruction(".align 2\n%s: .space %d", "Allocate Space", ir->data.reserve.name, ir->data.reserve.size);
                 break;
+            }
+            case ir_sconst: {
+                emitInstruction(".align 2\n$%p$: .asciiz \"%s\"", "Allocate STRING RO-DATA", ir->data.sconst, ir->data.sconst);
             }
             default: {
                 /* Nothing to do */
