@@ -2,16 +2,18 @@ var arr[20] int;
 var i int := 0;
 var str[20] string;
 
+# var @badarr[10] int; # Lexical error
+# var badarr int[50];  # Parsing error
+
 fun f int ()
   str[0] := "This-is-cs473.";
   arr[0] := 2024;
   printstring(str[0]);
   printint(arr[0]);
 
-  #undefstr[0] := str[0];    # Symbol Resolution Failed
-  #str[0] := arr[0];         # Type Check Failed
-  #printint(str[0]);         # Type Check Failed
-  #printstring(arr[0]);      # Type Check Failed
+  # undefstr[0] := str[0];    # Symbol Resolution Failed
+  # str[0] := arr[0];         # Type Check Failed
+
 
 
   while ( i < 500)           # Array write out of bound

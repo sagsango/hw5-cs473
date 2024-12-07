@@ -1,3 +1,4 @@
+# Support of Global array
 var arr[20] int;
 var x int := 2;
 var str[20] string;

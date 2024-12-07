@@ -180,7 +180,8 @@ void yyerror(const char *s) {
 %left PLUS MINUS     // Addition and subtraction
 %left MUL DIV REM   // Multiplication, division, and remainder
 %right NOT           // Logical NOT
-%right LBRACKET LPAREN // Array access and function calls
+%right LBRACKET LPAREN // Array access
+
 %left SEMICOLON
 %left FUNC_CALL_PREC
 
