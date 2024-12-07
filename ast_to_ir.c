@@ -390,7 +390,7 @@ static ir_node * ast_to_ir_stmt(stmt_node * s, S_table global_types, S_table fun
 	        assert(0);
         }
         case array_assign_stmt: {
-            assert (f ==0);
+            //assert (f ==0); TODO: Support the local array too; this is global array which is overwriten in a function
             ir_node * index_exp = ast_to_ir_expr(s->data.array_assign_ops.ind_exp, global_types, function_decs, f);
             ir_node * assign_exp = ast_to_ir_expr(s->data.array_assign_ops.assign_exp, global_types, function_decs, f);
             ir_node * node =ArrayWrite(s->data.array_assign_ops.name, index_exp, assign_exp);
@@ -636,6 +636,12 @@ static ir_node * ast_to_ir_var (vardec_node * var, S_table global_types, S_table
             assert(var->implicit == 0);
             if (var->type->kind == int_ty) {
                 ir_node * dec = Reserve(4 * var->size, var->name, NULL);
+                //ir_node * init = Write(var->name);
+                //init->tree_ir_1 = ast_to_ir_expr(var->init, global_types, function_decs, f);
+                return dec;
+            }
+            if (var->type->kind == string_ty) {
+                ir_node * dec = Reserve(4 * var->size, var->name, NULL); // strings are just pointers remember? so need only 4 bytes per index
                 //ir_node * init = Write(var->name);
                 //init->tree_ir_1 = ast_to_ir_expr(var->init, global_types, function_decs, f);
                 return dec;
