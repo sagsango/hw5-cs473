@@ -206,6 +206,17 @@ static void mips_ir_translate(ir_node * ir) {
             break;
             assert(0);
         }
+        case ir_array_read: {
+            emitInstruction("lw $v0, 4($sp)", "LOAD index from @sp+4");
+            emitInstruction("mul $v0, $v0, 4", "index = index * 4");
+
+            emitInstruction("la $v1, %s", "LOAD @arr", ir->data.read_write.name);
+            emitInstruction("add $v1, $v1, $v0", "arr = arr + index*4");
+
+            emitInstruction("lw $v0, ($v1)", "LOAD arr[index*4]");
+            emitInstruction("sw $v0, 4($sp)", "STORE @sp+4 = arr[index*4]");
+            break;
+        }
         case ir_write: {
             emitInstruction("add $sp, $sp, 4", "INC sp");
             emitInstruction("lw $v0, ($sp)", "LOAD @sp");
@@ -213,6 +224,20 @@ static void mips_ir_translate(ir_node * ir) {
             emitInstruction("sw $v0, ($v1)", "STORE @v1");
             break;
             assert(0);
+        }
+        case ir_array_write: {
+            emitInstruction("lw $v0, 4($sp)", "LOAD index from @sp+4");
+            emitInstruction("mul $v0, $v0, 4", "index = index * 4");
+
+            emitInstruction("lw $a0, 8($sp)", "LOAD assign_val from @sp+8");
+
+            emitInstruction("la $v1, %s", "LOAD @arr", ir->data.read_write.name);
+            emitInstruction("add $v1, $v1, $v0", "arr = arr + index*4");
+
+            emitInstruction("sw $a0, ($v1)", "arr[index*4] = assign_val");
+
+            emitInstruction("add $sp, $sp, 8", "INC sp because we did read, index then val");
+            break;
         }
         case ir_arglocal_read: {
             int index = ir->data.iconst;

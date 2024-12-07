@@ -42,6 +42,7 @@ void transformExpr(exp_node * e, S_table global_types, S_table function_decs, fr
         case eq_exp:
         case or_exp:
         case and_exp:
+        case array_access_exp:
             break;
         case string_exp:
             break;

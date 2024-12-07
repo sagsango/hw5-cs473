@@ -71,6 +71,8 @@ ir_node * addPushPop(ir_node * ir) {
         case ir_intrinsic: break;
         case ir_seq: break;
         case ir_pop: break;
+        case ir_array_read: break;
+        case ir_array_write: break;
         default: {
             assert(0); // Not supported
         }

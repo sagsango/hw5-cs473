@@ -1,0 +1,18 @@
+# Set the executable to debug
+file ./bluejaycc
+
+# Specify the arguments for the program
+set args tests/05-globals/pass1.bluejay out.misp -ir
+
+# Set a breakpoint at the main function (or any other function of interest)
+# break main
+
+# Automatically start the program
+run
+
+# Optional: Enable pretty-printing for better output formatting
+# set print pretty on
+
+# Optional: Echo a confirmation message to indicate the script is loaded
+echo "Custom gdb.init loaded. Debugging session started.\n"
+

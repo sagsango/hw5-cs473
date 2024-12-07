@@ -77,11 +77,28 @@ ir_node * Read(char * name) {
     return ret;
 }
 
+ir_node * ArrayRead(char *name, ir_node * idx) {
+    ir_node * ret = calloc(1, sizeof(ir_node));
+    ret->kind = ir_array_read;
+    ret->data.array_read.name = name;
+    ret->data.array_read.idx = idx;
+    return ret;
+}
+
 /* Write a var */
 ir_node * Write(char * name) {
     ir_node * ret = calloc(1, sizeof(ir_node));
     ret->kind = ir_write;
     ret->data.sconst = name;
+    return ret;
+}
+
+ir_node * ArrayWrite(char *name, ir_node * idx, ir_node * assign) {
+    ir_node * ret = calloc(1, sizeof(ir_node));
+    ret->kind = ir_array_write;
+    ret->data.array_write.name = name;
+    ret->data.array_write.idx = idx;
+    ret->data.array_write.assign = assign;
     return ret;
 }
 
@@ -239,9 +256,21 @@ void ir_list_write(ir_node * head, const char * file) {
                 break;
 
             case ir_read:
-            case ir_write:
+            case ir_write: {
                 write_null_terminated_string(fd, head->data.read_write.name);
                 break;
+            }
+
+
+            case ir_array_read: {
+                write_null_terminated_string(fd, head->data.array_read.name);
+                break;
+            }
+            case ir_array_write: {
+                write_null_terminated_string(fd, head->data.array_write.name);
+                break;
+            }
+
 
             case ir_lbl:
             case ir_jump:
@@ -384,6 +413,13 @@ ir_node * ir_list_read(const char * file) {
                 node->data.read_write.name = read_null_terminated_string(fd);
                 break;
 
+            case ir_array_read:
+                node->data.array_read.name = read_null_terminated_string(fd);
+                break;
+            case ir_array_write:
+                node->data.array_write.name = read_null_terminated_string(fd);
+            break;
+
             case ir_lbl:
             case ir_jump:
             case ir_branchzero:
@@ -446,7 +482,9 @@ void ir_list_print(ir_node * head) {
             [ir_not] = "NOT",
             [ir_reserve] = "RESERVE",
             [ir_read] = "READ",
+            [ir_array_read] = "READ_ARRAY[POP0]",
             [ir_write] = "WRITE",
+            [ir_array_write] = "WRITE_ARRAY[POP0]=POP1",
             [ir_arglocal_read] = "ARGLOCAL_READ",
             [ir_arglocal_write] = "ARGLOCAL_WRITE",
             [ir_lbl] = "LBL",
@@ -513,6 +551,14 @@ void ir_list_print(ir_node * head) {
             case ir_write:
                 printf("\t%s %s\n", name, head->data.sconst);
                 break;
+
+            case ir_array_read:
+                printf("\t%s %s\n", name, head->data.array_read.name);
+                break;
+
+            case ir_array_write:
+                printf("\t%s %s\n", name, head->data.array_write.name);
+            break;
 
             case ir_lbl:
                 printf("%s:\n", head->data.lbl->name);

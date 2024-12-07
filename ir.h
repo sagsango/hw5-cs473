@@ -37,7 +37,9 @@ enum ir_op {
     // Variables
     ir_reserve,
     ir_read,
+    ir_array_read,
     ir_write,
+    ir_array_write,
     ir_arglocal_read,
     ir_arglocal_write,
 
@@ -82,6 +84,8 @@ typedef struct ir_node {
         struct { ir_label* lbl; int vars; } call_function;
 
         struct { struct ir_node * o1; struct ir_node * o2; } seq;
+        struct { char * name; struct ir_node * idx; } array_read;
+        struct { char * name; struct ir_node * idx; struct ir_node * assign;} array_write;
 
 	/*
 		TODO: FOr array read wirte
@@ -108,8 +112,10 @@ ir_node * Ops(enum ir_op);
 ir_node * Intrinsic(enum intrinsic op);
 ir_node * Reserve(int size, char * name, char * val);
 ir_node * Read(char * name);
+ir_node * ArrayRead(char *name, ir_node * idx);
 ir_node * Address(char * name);
 ir_node * Write(char * name);
+ir_node * ArrayWrite(char *name, ir_node * idx, ir_node * assign);
 ir_node * ArgLocalRead(int i);
 ir_node * ArgLocalWrite(int i);
 ir_node * Label(ir_label * lbl);

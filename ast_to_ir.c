@@ -184,6 +184,11 @@ static ir_node * ast_to_ir_expr(exp_node * e, S_table global_types, S_table func
             ir_node * read_node = Read(e->data.namevar);
             return read_node;
         }
+        case array_access_exp: {
+            //assert (f == 0);
+            ir_node * array_read_node = ArrayRead(e->data.array_access_ops.name, ast_to_ir_expr(e->data.array_access_ops.ind_exp, global_types, function_decs, f));
+            return array_read_node;
+        }
         case string_exp: {
             char * str = strdup(e->data.strval);
             int len = strlen(str);
@@ -220,7 +225,7 @@ static ir_node * ast_to_ir_expr(exp_node * e, S_table global_types, S_table func
                 return ret;
             }
 
-           // assert (s->data.exp_ops.exp->data.funcall_op.args_exp == NULL);
+            // assert (s->data.exp_ops.exp->data.funcall_op.args_exp == NULL);
             ir_node * eval_args = Nop();
             list * args = e->data.funcall_op.args_exp;
             int nargs = 0;
@@ -240,7 +245,6 @@ static ir_node * ast_to_ir_expr(exp_node * e, S_table global_types, S_table func
             assert (0);
 
             break;
-
         }
         default:
             assert(0); // Dead code
@@ -384,6 +388,13 @@ static ir_node * ast_to_ir_stmt(stmt_node * s, S_table global_types, S_table fun
             node->tree_ir_1 = exp;
             return node;
 	        assert(0);
+        }
+        case array_assign_stmt: {
+            assert (f ==0);
+            ir_node * index_exp = ast_to_ir_expr(s->data.array_assign_ops.ind_exp, global_types, function_decs, f);
+            ir_node * assign_exp = ast_to_ir_expr(s->data.array_assign_ops.assign_exp, global_types, function_decs, f);
+            ir_node * node =ArrayWrite(s->data.array_assign_ops.name, index_exp, assign_exp);
+            return node;
         }
         case while_stmt: {
             {
@@ -612,7 +623,7 @@ static ir_node * ast_to_ir_var (vardec_node * var, S_table global_types, S_table
     */
 
     // TODO Handle variable declarations here
-    if (var->array) assert(0);
+
 
 
 
@@ -620,6 +631,16 @@ static ir_node * ast_to_ir_var (vardec_node * var, S_table global_types, S_table
         // TODO: Only int ??
         if (var->implicit) {
             return NULL;
+        }
+        if (var->array) {
+            assert(var->implicit == 0);
+            if (var->type->kind == int_ty) {
+                ir_node * dec = Reserve(4 * var->size, var->name, NULL);
+                //ir_node * init = Write(var->name);
+                //init->tree_ir_1 = ast_to_ir_expr(var->init, global_types, function_decs, f);
+                return dec;
+            }
+            assert (0);
         }
        //  fprintf(stderr, "global:%s, f:%ld, imp:%d, manually:%d\n", var->name, (long)f, var->implicit, (int)var->manually);
         if (var->type->kind == int_ty) {
@@ -637,9 +658,11 @@ static ir_node * ast_to_ir_var (vardec_node * var, S_table global_types, S_table
             init->tree_ir_1 = ast_to_ir_expr(var->init, global_types, function_decs, f);
             return Seq(dec, init);
         }
+
     }
     // fprintf(stderr, "local/args/imp:%s, f:%ld, imp:%d, local_arg:%ld, manually:%d\n", var->name, (long)f, var->implicit, (long)S_look(f->args_locs_types, S_Symbol(var->name)), (int)var->manually);
     if (f != 0) { // for function, local + args + implicit
+        //if (var->array) assert(0);
         if( S_look(f->indexes, S_Symbol(var->name)) != NULL  && S_look(f->args, S_Symbol(var->name)) == NULL) {
             if (S_look(f->seen, S_Symbol(var->name)) != NULL ) {
                 return NULL;
@@ -715,7 +738,7 @@ ir_node * ast_to_ir(program* p, S_table globals_types, S_table functions_ret, S_
     ret->tree_ir_3 = Seq(stmts, _exit);
 
 
-    
+
     return ret;
 
 

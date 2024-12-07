@@ -24,7 +24,14 @@ ir_node * ir_tree_to_list(ir_node * ir) {
         case ir_iconst: {
             return ir;
         }
-        case ir_sconst: { return ir; }
+        case ir_sconst: {
+            return ir;
+        }
+        case ir_array_read: {
+            ir_node * idx = ir_tree_to_list(ir->data.array_read.idx);
+            find_last(idx)->next = ir;
+            return idx;
+        }
         case ir_add: {
             // 2 then 1 then op
             ir_node * left_expr = ir_tree_to_list(ir->tree_ir_1);
@@ -165,6 +172,13 @@ ir_node * ir_tree_to_list(ir_node * ir) {
             ir_node * exp = ir_tree_to_list(ir->tree_ir_1);
             find_last(exp)->next = ir;
             return exp;
+        }
+        case ir_array_write: {
+            ir_node * index_exp = ir_tree_to_list(ir->data.array_write.idx);
+            ir_node * assign_exp = ir_tree_to_list(ir->data.array_write.assign);
+            find_last(assign_exp)->next = index_exp;
+            find_last(assign_exp)->next = ir;
+            return assign_exp;
         }
         case ir_arglocal_read: { return ir; }
         case ir_arglocal_write: {

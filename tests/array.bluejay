@@ -1,0 +1,24 @@
+var arr[20] int;
+var x int := 2;
+#var s[20] string;
+
+fun f int ()
+  return arr[1];
+
+printint(f());
+
+printint(arr[0]);
+
+arr[0] := 9;
+
+printint(arr[0]);
+
+arr[0] := arr[0] * arr[0];
+
+printint(arr[0]);
+
+arr[1] := 20;
+
+printint(f());
+
+return 0;
