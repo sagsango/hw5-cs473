@@ -95,10 +95,10 @@ void transformStmts(list * l, S_table global_types, S_table function_decs, frame
 
             static int repeat_var = 0;
             char varname[10];
-            snprintf(varname, sizeof(varname), "$repeat$%d", repeat_var++);
+            snprintf(varname, sizeof(varname), "$repeat%d$", repeat_var++);
             char * v = strdup(varname);
 
-            p.variables = ListAddLast(VarDecNode(v, IntTyNode(), IntNode(1024)), p.variables);
+            p.variables = ListAddLast(VarDecNode(v, IntTyNode(), IntNode(0)), p.variables);
             S_enter(global_types, S_Symbol(v), IntTyNode());
 
             exp_node * times = s->data.repeat_ops.times;

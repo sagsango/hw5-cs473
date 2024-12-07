@@ -77,7 +77,7 @@ typedef struct ir_node {
         ir_label* lbl;
 
         struct { int size; char* name; char* val; } reserve;
-        struct { char* name; int isaddress; } read_write;
+        struct { char* name; int isaddress; } read_write; /* TODO: Use isaddredd */
 
         struct { ir_label* lbl; int vars; } call_function;
 

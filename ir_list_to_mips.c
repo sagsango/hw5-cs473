@@ -123,7 +123,7 @@ static void mips_ir_translate(ir_node * ir) {
             emitInstruction("sub $sp, $sp, 4", "DEC sp");
             break;
         }
-        case ir_bor:            {
+        case ir_bor: {
             emitInstruction("add $sp, $sp, 4", "INC sp");
             emitInstruction("lw $v1, ($sp)", "LOAD @sp");
             emitInstruction("add $sp, $sp, 4", "INC sp");
@@ -214,8 +214,21 @@ static void mips_ir_translate(ir_node * ir) {
             break;
             assert(0);
         }
-        case ir_arglocal_read:  { assert(0); }
-        case ir_arglocal_write: { assert(0); }
+        case ir_arglocal_read: {
+            int index = ir->data.iconst;
+            emitInstruction("lw $v0, %d($fp)", "ArgLocal read from frame", - index * 4);
+            emitInstruction("sw $v0, ($sp)", "Arglocal writ into stack");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+            break;
+        }
+        case ir_arglocal_write: {
+            int index = ir->data.iconst;
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            emitInstruction("lw $v0, ($sp)", "Arglocal read from stack @sp");
+            emitInstruction("sw $v0, %d($fp)", "Arglocal Write to frame", - index * 4);
+            break;
+            //assert(0);
+        }
         case ir_lbl: {
             emitLabel(ir->data.lbl->name, "LABEL");
             break;
@@ -230,9 +243,109 @@ static void mips_ir_translate(ir_node * ir) {
             emitInstruction("beq $v0, $zero, %s", "BRANCH if 0", ir->data.lbl->name);
             break;
         }
-        case ir_call:           { assert(0); }
-        case ir_function:       { assert(0); }
-        case ir_ret:            { assert(0); }
+        case ir_call: {
+            int nargs = ir->data.call_function.vars;
+#define N 100
+            emitInstruction("add $v0, $sp, %d", "Start:::@Frame; by loading the address before start of frame", (nargs+1) * 4);
+            emitInstruction("sw $ra, ($v0)", "Frame[-4] = RA");
+
+            emitInstruction("sub $sp, $sp, %d", "Frame-local-and-intrinsic", N*4);
+
+            // Save FP
+            emitInstruction("sw $fp, ($sp)", "old fp = @sp");
+            emitInstruction("sub $sp, $sp, 4", "DEC sp");
+
+            // init new FP
+            emitInstruction("sub $fp, $v0, 4", "new - fp = @Frame");
+
+            emitInstruction("jal %s", "Jump to a label", ir->data.lbl->name);
+
+            // TODO: DO something for void functions
+
+            // Return val:
+            emitInstruction("lw $v0, 4($sp)", "ret val @sp+4");
+
+            // fp
+            emitInstruction("lw $fp, 8($sp)", "old fp =  @sp+8");
+
+            // ra
+            emitInstruction("lw $ra, %d($sp)", "old ra =  @sp", (nargs+N+2+1)*4);
+
+            // free the frame
+            emitInstruction("add $sp, $sp, %d", "restore sp = old sp", (nargs+N+2+1)*4);
+
+
+            emitInstruction("sw $v0, ($sp)", "ret val = @sp");
+            emitInstruction("sub $sp, $sp, 4", "DONE::DEC sp");
+
+
+            /* TODO: Before Making the Jump, in caller */
+            /*
+                *  <Caller-RA>
+                *  ...
+                *  ...
+                *  ...
+                *  ...
+                *  -473 <Caller_FP>
+                *  Arg1
+                *  Arg2
+                *  ....
+                *  ....
+                *  ....
+                *  ArgN
+                *  <Callie_FP>
+                */
+
+
+            /* TODO: When we are in the callie */
+            /*
+               *  -473 <Caller_FP>
+               *  Arg1
+               *  Arg2
+               *  ....
+               *  ....
+               *  ....
+               *  ArgN
+               *  <Callie_FP>
+               *  <RA>
+               */
+
+            /* TODO: Before returning from the callie */
+            /*
+                *  -473 <Caller_FP>
+                *  Arg1
+                *  Arg2
+                *  ....
+                *  ....
+                *  ....
+                *  ArgN
+                *  <Callie_FP>
+                *  <Return_val>
+                */
+
+            /*TODO: After returning from the callie */
+            /*
+             *  <Return_val>
+             */
+
+
+
+
+            break;
+            assert(0);
+        }
+        case ir_function: {
+            // TODO: Add logic here how to save state when we are in the function
+            emitLabel(ir->data.call_function.lbl->name, "LABEL");
+            break;
+            assert(0);
+        }
+        case ir_ret: {
+            // TODO: DO something about it
+            emitInstruction("jr $ra", "return back");
+            //assert(0);
+            break;
+        }
         case ir_intrinsic: {
             switch(ir->data.intrinsic) {
                 case intrinsic_exit: {
@@ -273,7 +386,11 @@ static void mips_ir_translate(ir_node * ir) {
         }
         case ir_seq:            { assert(0); }
         case ir_push:           { assert(0); }
-        case ir_pop:            { assert(0); }
+        case ir_pop: {
+            emitInstruction("add $sp, $sp, 4", "INC sp");
+            break;
+            assert(0);
+        }
         default: {
             assert(0); // Not supported
         }
