@@ -387,6 +387,42 @@ static ir_node * ast_to_ir_stmt(stmt_node * s, S_table global_types, S_table fun
         }
         case while_stmt: {
             {
+
+                /* Without this cond our code goes more than 30,000 Line in 09/pass10.bluejay */
+                if (s->data.while_ops.otherwise_stmts == NULL) {
+                    /*
+                     *  L0:
+                     *      cond
+                     *      branch if zero L1
+                     *      {
+                     *          Body
+                     *          jump L0:
+                     *       }
+                     *  L1:
+                     *
+                     */
+
+                    ir_label *l0 = freshLabel(); // 0
+                    ir_label *l1 = freshLabel(); // 1
+
+
+                    ir_node *cond = ast_to_ir_expr(s->data.while_ops.cond, global_types, function_decs, f);
+
+                    ir_node *then_nodes = ast_to_ir_stmts(s->data.while_ops.then_stmts, global_types, function_decs, f);
+                    then_nodes = Seq(then_nodes, Jump(l0));
+
+                    ir_node * while_branch = Branch(l1);
+                    while_branch->tree_ir_1 = cond;
+                    while_branch->tree_ir_2 = then_nodes;
+                    while_branch->tree_ir_3 = Label(l1);
+
+                    ir_node * L0 = Label(l0);
+                    L0->tree_ir_1 = Nop();
+
+                    return Seq(L0, while_branch);
+
+                }
+
                 ir_label *l1 = freshLabel(); // 0
                 ir_label *l2 = freshLabel(); // 1
 
@@ -667,12 +703,19 @@ ir_node * ast_to_ir(program* p, S_table globals_types, S_table functions_ret, S_
     // TODO combine vars, functions, and stmts
 
 
+    /* Always should be exit() */
+    ir_node *_exit = Intrinsic(intrinsic_exit);
+    ir_node * _arg = Iconst(0);
+    _exit->tree_ir_1 = _arg;
+
+
     ir_node * ret = Nop(); ret->kind = ir_program;
     ret->tree_ir_1 = vars;
     ret->tree_ir_2 = functions;
-    ret->tree_ir_3 = stmts;
+    ret->tree_ir_3 = Seq(stmts, _exit);
 
 
+    
     return ret;
 
 
